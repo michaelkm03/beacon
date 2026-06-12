@@ -126,6 +126,37 @@ zillow-trends/
     └── tiles/              # Tile cache — populated at runtime (gitignored)
 ```
 
+## Deployment
+
+Beacon runs on **AWS Lightsail** (4 GB RAM) behind nginx with SSL via Let's Encrypt.
+
+**Stack:**
+- AWS Lightsail — Ubuntu 24.04, 4 GB RAM (needed to hold 10M+ parquet rows in memory)
+- nginx — reverse proxy on port 80/443 → uvicorn on port 8000
+- systemd — keeps the app running and restarts it on crash
+- certbot — auto-renewing SSL certificate
+
+**Service management:**
+```bash
+sudo systemctl status beacon     # check status
+sudo systemctl restart beacon    # restart app
+sudo journalctl -u beacon -f     # tail logs
+```
+
+**Updating the app:**
+```bash
+cd /opt/beacon
+sudo git pull
+sudo systemctl restart beacon
+```
+
+**Refreshing data** (pulls latest Zillow CSVs, ~10 min):
+```bash
+cd /opt/beacon
+sudo venv/bin/python ingest.py
+sudo systemctl restart beacon
+```
+
 ## Tests
 
 ```bash
