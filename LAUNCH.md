@@ -99,20 +99,106 @@ Each page must:
 
 ## Pre-Launch Checklist
 
-- [ ] Verify site in Google Search Console, submit sitemap
-- [ ] Build Reddit karma in r/RealEstate + r/FirstTimeHomeBuyer (no HomeSight mentions yet)
-- [ ] Create Product Hunt maker account
-- [ ] Start participating in Indie Hackers discussions
+### SEO & Discoverability
+- [x] **S1** — Add `sitemap.xml` route to server — deployed to homesight.live 2026-06-12 (commit 92f6129)
+- [x] **S2** — Verify homesight.live in Google Search Console — auto-verified via GA4 tag (G-47JL6EME24) on 2026-06-12
+- [x] **S3** — Submit sitemap in Search Console: `https://homesight.live/sitemap.xml` — submitted and confirmed 2026-06-12
+
+### Community Accounts
+- [x] **C1** — Create Product Hunt maker account — clock started 2026-06-12; earliest launch date: **2026-07-12**
+- [ ] **C2** — Start participating in Indie Hackers discussions (need 4–6 weeks before posting milestone)
+  - Go to indiehackers.com → find active threads in "Ask IH" or "Growth"
+  - Answer 2–3 questions genuinely per week — no HomeSight mentions yet
+  - Goal: 4–6 weeks of participation before posting milestone
+
+### Free Directory Submissions
+- [ ] **D1** — BetaList — betalist.com/submit
+  - Fill out: name, URL, tagline, description, category (Real Estate / Data)
+  - Tagline: `Zillow data for every U.S. ZIP code — mapped, trended, ranked`
+  - Takes 1–2 weeks to go live; submit now
+- [x] **D2** — Uneed — uneed.best/submit-a-tool
+  - Same info as BetaList; goes live same day or next day
+  - Note: currently running a $600 giveaway — upvotes earn raffle tickets
+- [x] **D3** — TinyLaunch — tinylaunch.com
+  - Submit product page; minimal friction
+- [x] **D4** — Smol Launch — smollaunch.com
+  - Submit product page; minimal friction
+
+### Reddit Karma Building (no HomeSight mentions yet)
+- [ ] **R1** — Answer 10+ real questions in r/RealEstate
+  - Go to r/RealEstate → sort by "New" → find questions you can answer with real housing data knowledge
+  - Track count: 0 / 10
+- [ ] **R2** — Answer 10+ real questions in r/FirstTimeHomeBuyer
+  - Same approach — focus on first-timer questions (down payment, market timing, rates)
+  - Track count: 0 / 10
+- [ ] **R3** — Participate in r/personalfinance rent vs. buy threads
+  - Search: `subreddit:personalfinance rent vs buy` → reply to active threads with data-driven takes
+  - No tool promotion — just be genuinely useful
+
+### Site Readiness
+- [x] **P1** — Favicon — confirmed present
+- [ ] **P2** — OG/social meta tags — title, description, image for rich previews on Reddit/Twitter/Slack
+  - Add to `<head>` in map.html: `og:title`, `og:description`, `og:image`, `og:url`, `twitter:card`
+  - og:image should be a screenshot of the map (1200x630px ideal)
+- [x] **P3** — Uptime monitoring — AWS Lambda + EventBridge + SNS, runs every 5 min, emails michaelkm03@gmail.com on failure (deployed 2026-06-12)
+  - Lambda: `homesight-monitor` (us-west-2)
+  - SNS topic: `arn:aws:sns:us-west-2:005097885341:homesight-alerts`
+  - Checks: /health, /api/zip/98101, /api/heatmap
+- [ ] **P4** — Bing Webmaster Tools — indexes homesight.live for Bing/DuckDuckGo
+  - Go to bing.com/webmasters → Add site → verify via auto-import from Google Search Console
+- [ ] **P5** — GA4 event tracking — track ZIP searches, map interactions, chart views
+  - Add `gtag('event', ...)` calls for key user actions in map.html
+- [ ] **P6** — Pre-write launch posts — draft all copy before launch day
+  - r/dataisbeautiful post (title + body)
+  - Show HN submission text + first comment
+  - Twitter/X launch thread (6 tweets)
+
+### Twitter/X Setup
+- [ ] **T1** — Set up alerts/monitoring for: @nickgerli1, @zillow, @redfin, @NAR_Research
+  - On Twitter/X: follow all four accounts
+  - Enable notifications for their tweets (bell icon)
+  - Optional: create a private Twitter List called "Housing" with these accounts for easy monitoring
+- [ ] **T2** — Reply farm: respond to 5+ housing market tweets with data from HomeSight (no promo, just value)
+  - Find tweet → pull relevant HomeSight data or screenshot → reply with the data point
+  - No link to HomeSight yet — just be the person with good data
+  - Track count: 0 / 5
+
+---
 
 ## Launch Week Sequence
 
-- **Day 1:** r/dataisbeautiful + r/MapPorn posts
-- **Day 2–3:** Show HN
-- **Day 4:** Twitter/X launch thread
-- **Day 5:** Product Hunt
+- [ ] **L1** — **Day 1:** r/dataisbeautiful + r/MapPorn posts
+  - Take a high-quality screenshot of the national ZIP choropleth map
+  - r/dataisbeautiful post: title starts with `[OC]`, credit Zillow Research in body, link HomeSight in comments (not title)
+  - r/MapPorn post: same screenshot, different title framing (geography angle)
+  - Post Tuesday–Thursday, 9–11 AM ET for best visibility
+- [ ] **L2** — **Day 2–3:** Show HN — `Show HN: HomeSight – Home values and rent trends across 26K U.S. ZIP codes`
+  - Post at news.ycombinator.com/submit — select "Show HN" in title
+  - Post your own comment within 60 seconds: why you built it + one interesting data finding + open Q&A
+  - Line up 5–10 people to upvote within the first 60 minutes
+  - Reply to every comment for the first 2 hours
+  - Post Tuesday–Thursday, 9–11 AM ET
+- [ ] **L3** — **Day 4:** Twitter/X launch thread
+  - Tweet 1: screenshot + one sentence, no link
+  - Tweets 2–5: data findings with screenshots
+  - Tweet 6: link + CTA
+  - Never lead with the link — algorithms suppress link-first posts
+- [ ] **L4** — **Day 5:** Product Hunt (requires maker account 30+ days old — earliest 2026-07-12)
+  - Launch at 12:01 AM Pacific on a Tuesday–Thursday
+  - Post maker comment immediately on launch day
+  - Reply to every comment within 15–30 min for first 6 hours
+
+---
 
 ## Month 2
 
-- Begin programmatic ZIP-level SSR pages
-- Submit to housing newsletters with a specific data finding as the pitch
-- Post "I launched" milestone on Indie Hackers with honest traffic numbers
+- [ ] **M1** — Begin programmatic ZIP-level SSR pages (`/housing-market/{zip}`)
+  - Requires SSR implementation (FastAPI Jinja2 templates or Next.js wrapper)
+  - Each page needs: unique `<title>`, meta description, real data on first response (not JS-rendered)
+  - Start with state-level pages → city → ZIP hierarchy
+- [ ] **M2** — Submit to housing newsletters with a specific data finding as the pitch
+  - Find 3–5 housing/real estate newsletters
+  - Pitch email: lead with a specific data finding (e.g., "ZIP codes with highest 5-year appreciation in Seattle metro"), offer it as a guest data insight
+- [ ] **M3** — Post "I launched" milestone on Indie Hackers with honest traffic numbers
+  - Write in "Milestones" category
+  - Include: what you built, launch channels used, traffic numbers, what worked / what didn't
