@@ -143,8 +143,7 @@ Each page must:
   - SNS topic: `arn:aws:sns:us-west-2:005097885341:homesight-alerts`
   - Checks: /health, /api/zip/98101, /api/heatmap
 - [x] **P4** — Bing Webmaster Tools — verified 2026-06-12, homesight.live indexed for Bing/DuckDuckGo
-- [ ] **P5** — GA4 event tracking — track ZIP searches, map interactions, chart views
-  - Add `gtag('event', ...)` calls for key user actions in map.html
+- [x] **P5** — GA4 event tracking — deployed 2026-06-12; tracks zip_search (landing + header), zip_click (map), metric_change, metro_search
 - [ ] **P6** — Pre-write launch posts — draft all copy before launch day
   - r/dataisbeautiful post (title + body)
   - Show HN submission text + first comment
