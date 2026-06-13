@@ -245,17 +245,20 @@
 
     #loading-msg {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-      z-index: 950; background: #0d1117;
-      padding: 20px 32px; border-radius: 8px; border: 1px solid var(--border);
-      text-align: center; display: none;
+      z-index: 950; display: none;
     }
-    #zip-ticker-num {
-      font-size: 2.2rem; font-weight: 700; color: var(--green);
-      font-variant-numeric: tabular-nums; letter-spacing: -1px; line-height: 1;
+    #ticker-track { stroke: rgba(110,231,183,0.12); }
+    #ticker-live {
+      stroke: #6ee7b7; stroke-dasharray: 185; stroke-dashoffset: 185;
+      filter: drop-shadow(0 0 5px rgba(110,231,183,0.55));
+      animation: ticker-draw 2.2s ease-in-out infinite;
     }
-    #zip-ticker-sub {
-      font-size: 0.62rem; color: var(--muted); text-transform: uppercase;
-      letter-spacing: 1.5px; margin-top: 5px;
+    @keyframes ticker-draw {
+      0%   { stroke-dashoffset: 185; opacity: 0; }
+      8%   { opacity: 1; }
+      75%  { stroke-dashoffset: 0; opacity: 1; }
+      92%  { stroke-dashoffset: 0; opacity: 0; }
+      100% { stroke-dashoffset: 185; opacity: 0; }
     }
 
     /* ── Rankings panel ── */
@@ -499,8 +502,20 @@
 
 <div id="loading-bar"></div>
 <div id="loading-msg">
-  <div id="zip-ticker-num">0</div>
-  <div id="zip-ticker-sub">▲ zip codes</div>
+  <svg viewBox="0 0 155 68" width="155" height="68" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="tk-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L0,7 L7,3.5 z" fill="#6ee7b7"/>
+      </marker>
+    </defs>
+    <path id="ticker-track"
+      d="M4,62 L22,50 L36,55 L56,37 L70,43 L93,22 L108,28 L132,9 L148,2"
+      fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="ticker-live"
+      d="M4,62 L22,50 L36,55 L56,37 L70,43 L93,22 L108,28 L132,9 L148,2"
+      fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+      marker-end="url(#tk-arrow)"/>
+  </svg>
 </div>
 <div id="map"></div>
 
@@ -880,28 +895,6 @@ document.getElementById("zip-input").addEventListener("keydown", e => {
   if (e.key === "Enter") jumpToZip();
 });
 
-// ── ZIP ticker animation ──────────────────────────────────────────────────────
-let _tickerRaf = null;
-function startZipTicker() {
-  const el = document.getElementById("zip-ticker-num");
-  if (!el) return;
-  const start = performance.now();
-  const duration = 2800;
-  const target = 26276;
-  cancelAnimationFrame(_tickerRaf);
-  function tick(now) {
-    const t = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - t, 3);
-    el.textContent = Math.round(eased * target).toLocaleString();
-    if (t < 1) _tickerRaf = requestAnimationFrame(tick);
-  }
-  _tickerRaf = requestAnimationFrame(tick);
-}
-function stopZipTicker() {
-  cancelAnimationFrame(_tickerRaf);
-  _tickerRaf = null;
-}
-
 // ── Boot ─────────────────────────────────────────────────────────────────────
 async function boot() {
   setLoading(10);
@@ -935,7 +928,6 @@ async function boot() {
 
   // ── Boundaries: use IndexedDB cache when returning within 1 hour ─────────────
   document.getElementById("loading-msg").style.display = "block";
-  startZipTicker();
   let geojson = null;
 
   if (!newVisit) {
@@ -947,7 +939,6 @@ async function boot() {
     const bRes = await fetch("/api/boundaries");
     if (!bRes.ok) {
       setMsg("⚠ Boundaries missing — run: python ingest.py", true);
-      stopZipTicker();
       document.getElementById("loading-msg").style.display = "none";
       setLoading(0); return;
     }
@@ -956,7 +947,6 @@ async function boot() {
   }
 
   window._geojson = geojson;
-  stopZipTicker();
   document.getElementById("loading-msg").style.display = "none";
   setLoading(80);
 
