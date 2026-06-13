@@ -247,10 +247,10 @@
       position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
       z-index: 950; display: none;
     }
-    #ticker-track { stroke: rgba(110,231,183,0.12); }
+    #ticker-track { stroke: rgba(0,230,118,0.15); }
     #ticker-live {
-      stroke: #6ee7b7; stroke-dasharray: 185; stroke-dashoffset: 185;
-      filter: drop-shadow(0 0 5px rgba(110,231,183,0.55));
+      stroke: #00e676; stroke-dasharray: 185; stroke-dashoffset: 185;
+      filter: drop-shadow(0 0 8px rgba(0,230,118,0.9));
       animation: ticker-draw 2.2s ease-in-out infinite;
     }
     @keyframes ticker-draw {
@@ -505,15 +505,15 @@
   <svg viewBox="0 0 155 68" width="155" height="68" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <marker id="tk-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-        <path d="M0,0 L0,7 L7,3.5 z" fill="#6ee7b7"/>
+        <path d="M0,0 L0,7 L7,3.5 z" fill="#00e676"/>
       </marker>
     </defs>
     <path id="ticker-track"
       d="M4,62 L22,50 L36,55 L56,37 L70,43 L93,22 L108,28 L132,9 L148,2"
-      fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
     <path id="ticker-live"
       d="M4,62 L22,50 L36,55 L56,37 L70,43 L93,22 L108,28 L132,9 L148,2"
-      fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+      fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"
       marker-end="url(#tk-arrow)"/>
   </svg>
 </div>
