@@ -480,8 +480,20 @@
       font-size: 0.67rem; color: #fb7185; margin-top: 8px;
       min-height: 1em; letter-spacing: 0.02em;
     }
+    #landing-divider {
+      text-align: center; font-size: 0.6rem; color: rgba(255,255,255,0.15);
+      margin: 14px 0 10px; letter-spacing: 0.1em;
+    }
+    #landing-loc-btn {
+      width: 100%; padding: 9px; background: transparent;
+      border: 1px solid rgba(110,231,183,0.2); border-radius: 3px;
+      color: rgba(255,255,255,0.45); font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+      transition: all 0.15s; font-family: inherit;
+    }
+    #landing-loc-btn:hover { border-color: rgba(110,231,183,0.45); color: rgba(255,255,255,0.8); }
     #landing-skip {
-      margin-top: 20px; text-align: center; font-size: 0.65rem;
+      margin-top: 16px; text-align: center; font-size: 0.65rem;
       color: rgba(255,255,255,0.2); cursor: pointer; letter-spacing: 0.06em;
       transition: color 0.15s;
     }
@@ -508,6 +520,8 @@
       <button id="landing-go" onclick="landingSubmit()">Explore</button>
     </div>
     <div id="landing-err"></div>
+    <div id="landing-divider">— or —</div>
+    <button id="landing-loc-btn" onclick="landingUseLocation()">📍 Use My Location</button>
     <div id="landing-skip" onclick="landingSkip()">Skip — explore the full map</div>
   </div>
 </div>
@@ -677,8 +691,9 @@ async function idbSet(key, val) {
 }
 
 // ── Landing popup state ───────────────────────────────────────────────────────
-let _bootDone   = false;
-let _pendingZip = null;
+let _bootDone       = false;
+let _pendingZip     = null;
+let _pendingLocation = null;
 
 function isNewVisit() {
   const last = parseInt(localStorage.getItem(VISIT_KEY) || "0");
@@ -944,6 +959,45 @@ document.getElementById("zip-input").addEventListener("keydown", e => {
   if (e.key === "Enter") jumpToZip();
 });
 
+// ── Geolocation helpers ───────────────────────────────────────────────────────
+function findNearestZip(lat, lng) {
+  let best = null, bestDist = Infinity;
+  for (const d of allData) {
+    if (d.lat == null || d.lng == null) continue;
+    const dist = (d.lat - lat) ** 2 + (d.lng - lng) ** 2;
+    if (dist < bestDist) { bestDist = dist; best = d.z; }
+  }
+  return best;
+}
+
+function landingUseLocation() {
+  const err = document.getElementById("landing-err");
+  if (!navigator.geolocation) {
+    err.textContent = "Geolocation not supported by your browser."; return;
+  }
+  err.textContent = "Locating…";
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      err.textContent = "";
+      const { latitude: lat, longitude: lng } = pos.coords;
+      localStorage.setItem(VISIT_KEY, String(Date.now()));
+      document.getElementById("landing-overlay").classList.add("hidden");
+      if (_bootDone) {
+        map.setView([lat, lng], 11, { animate: true });
+        const zip = findNearestZip(lat, lng);
+        if (zip) openPanel(zip);
+      } else {
+        _pendingLocation = { lat, lng };
+      }
+    },
+    () => {
+      err.textContent = "";
+      landingSkip();
+    },
+    { timeout: 8000 }
+  );
+}
+
 // ── Boot ─────────────────────────────────────────────────────────────────────
 async function boot() {
   setLoading(10);
@@ -1038,13 +1092,26 @@ async function boot() {
 
   _bootDone = true;
 
+  // Clear stale ZIP 00000 saved by old bug where empty submit was accepted
+  if (localStorage.getItem(LAST_ZIP_KEY) === "00000") localStorage.removeItem(LAST_ZIP_KEY);
+
   // If user submitted popup before boot finished, navigate now
   if (_pendingZip) { applyPendingZip(); return; }
 
-  // New visits: popup handles navigation — no geolocation
+  // If user granted location before boot finished, navigate now
+  if (_pendingLocation) {
+    const { lat, lng } = _pendingLocation;
+    _pendingLocation = null;
+    map.setView([lat, lng], 11, { animate: false });
+    const zip = findNearestZip(lat, lng);
+    if (zip) openPanel(zip);
+    return;
+  }
+
+  // New visits: popup handles navigation — no auto-geolocation
   if (newVisit) { map.setView([39, -96], 4, { animate: false }); return; }
 
-  // Returning visit: restore last ZIP, else geolocation
+  // Returning visit: restore last ZIP, else show full US
   const savedZip = localStorage.getItem(LAST_ZIP_KEY);
   if (savedZip && valueMap[savedZip]) {
     const d = valueMap[savedZip];
@@ -1053,30 +1120,7 @@ async function boot() {
     return;
   }
 
-  function findNearestZip(lat, lng) {
-    let best = null, bestDist = Infinity;
-    for (const d of allData) {
-      if (d.lat == null || d.lng == null) continue;
-      const dist = (d.lat - lat) ** 2 + (d.lng - lng) ** 2;
-      if (dist < bestDist) { bestDist = dist; best = d.z; }
-    }
-    return best;
-  }
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const { latitude: lat, longitude: lng } = pos.coords;
-        map.setView([lat, lng], 11, { animate: false });
-        const zip = findNearestZip(lat, lng);
-        if (zip) openPanel(zip);
-      },
-      () => map.setView([39, -96], 4, { animate: false }),
-      { timeout: 5000 }
-    );
-  } else {
-    map.setView([39, -96], 4, { animate: false });
-  }
+  map.setView([39, -96], 4, { animate: false });
 }
 
 // ── Panel ─────────────────────────────────────────────────────────────────────

@@ -178,16 +178,23 @@ def _build_heatmap() -> list:
                 .rename(columns={"zip":"z"}))
     latest["v"] = latest["v"].round()
 
-    for field, months in [("y", 12), ("y3", 36), ("y5", 60)]:
-        cutoff = max_date - pd.DateOffset(months=months)
-        old    = (hv[hv["date"] <= cutoff]
-                  .groupby("zip")["value"].last()
-                  .rename("old").reset_index())
-        latest = (latest.merge(old, left_on="z", right_on="zip", how="left")
-                        .drop(columns=["zip"]))
-        latest[field] = ((latest["v"] - latest["old"]) / latest["old"] * 100
-                         ).where(latest["old"] > 0).round(1)
-        latest.drop(columns=["old"], inplace=True)
+    cutoff_1y = max_date - pd.DateOffset(months=12)
+    old_1y    = hv[hv["date"] <= cutoff_1y].groupby("zip")["value"].last().rename("old").reset_index()
+    latest    = latest.merge(old_1y, left_on="z", right_on="zip", how="left").drop(columns=["zip"])
+    latest["y"] = ((latest["v"] - latest["old"]) / latest["old"] * 100).where(latest["old"] > 0).round(1)
+    latest    = latest.drop(columns=["old"])
+
+    cutoff_3y = max_date - pd.DateOffset(months=36)
+    old_3y    = hv[hv["date"] <= cutoff_3y].groupby("zip")["value"].last().rename("old").reset_index()
+    latest    = latest.merge(old_3y, left_on="z", right_on="zip", how="left").drop(columns=["zip"])
+    latest["y3"] = ((latest["v"] - latest["old"]) / latest["old"] * 100).where(latest["old"] > 0).round(1)
+    latest    = latest.drop(columns=["old"])
+
+    cutoff_5y = max_date - pd.DateOffset(months=60)
+    old_5y    = hv[hv["date"] <= cutoff_5y].groupby("zip")["value"].last().rename("old").reset_index()
+    latest    = latest.merge(old_5y, left_on="z", right_on="zip", how="left").drop(columns=["zip"])
+    latest["y5"] = ((latest["v"] - latest["old"]) / latest["old"] * 100).where(latest["old"] > 0).round(1)
+    latest    = latest.drop(columns=["old"])
 
     df_out = (latest
               .merge(zip_df[["zip","city","state","lat","lng"]],
