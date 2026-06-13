@@ -221,6 +221,24 @@ def index():
 def data_page():
     return FileResponse(str(BASE_DIR / "data.html"))
 
+@app.get("/sitemap.xml", response_class=Response)
+def sitemap():
+    content = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://homesight.live/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://homesight.live/data</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>"""
+    return Response(content=content, media_type="application/xml",
+                    headers={"Cache-Control": CACHE_24H})
+
 @app.get("/api/heatmap")
 def get_heatmap():
     if not heatmap_cache:
