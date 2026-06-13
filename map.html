@@ -245,9 +245,17 @@
 
     #loading-msg {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-      z-index: 950; background: #0d1117; color: white;
-      padding: 16px 28px; border-radius: 6px; border-left: 3px solid var(--green);
-      font-size: 0.88rem; display: none;
+      z-index: 950; background: #0d1117;
+      padding: 20px 32px; border-radius: 8px; border: 1px solid var(--border);
+      text-align: center; display: none;
+    }
+    #zip-ticker-num {
+      font-size: 2.2rem; font-weight: 700; color: var(--green);
+      font-variant-numeric: tabular-nums; letter-spacing: -1px; line-height: 1;
+    }
+    #zip-ticker-sub {
+      font-size: 0.62rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 1.5px; margin-top: 5px;
     }
 
     /* ── Rankings panel ── */
@@ -490,7 +498,10 @@
 
 
 <div id="loading-bar"></div>
-<div id="loading-msg">Loading ZIP boundaries…</div>
+<div id="loading-msg">
+  <div id="zip-ticker-num">0</div>
+  <div id="zip-ticker-sub">▲ zip codes</div>
+</div>
 <div id="map"></div>
 
 <div id="stats-overlay">
@@ -869,6 +880,28 @@ document.getElementById("zip-input").addEventListener("keydown", e => {
   if (e.key === "Enter") jumpToZip();
 });
 
+// ── ZIP ticker animation ──────────────────────────────────────────────────────
+let _tickerRaf = null;
+function startZipTicker() {
+  const el = document.getElementById("zip-ticker-num");
+  if (!el) return;
+  const start = performance.now();
+  const duration = 2800;
+  const target = 26276;
+  cancelAnimationFrame(_tickerRaf);
+  function tick(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(eased * target).toLocaleString();
+    if (t < 1) _tickerRaf = requestAnimationFrame(tick);
+  }
+  _tickerRaf = requestAnimationFrame(tick);
+}
+function stopZipTicker() {
+  cancelAnimationFrame(_tickerRaf);
+  _tickerRaf = null;
+}
+
 // ── Boot ─────────────────────────────────────────────────────────────────────
 async function boot() {
   setLoading(10);
@@ -902,6 +935,7 @@ async function boot() {
 
   // ── Boundaries: use IndexedDB cache when returning within 1 hour ─────────────
   document.getElementById("loading-msg").style.display = "block";
+  startZipTicker();
   let geojson = null;
 
   if (!newVisit) {
@@ -913,6 +947,7 @@ async function boot() {
     const bRes = await fetch("/api/boundaries");
     if (!bRes.ok) {
       setMsg("⚠ Boundaries missing — run: python ingest.py", true);
+      stopZipTicker();
       document.getElementById("loading-msg").style.display = "none";
       setLoading(0); return;
     }
@@ -921,6 +956,7 @@ async function boot() {
   }
 
   window._geojson = geojson;
+  stopZipTicker();
   document.getElementById("loading-msg").style.display = "none";
   setLoading(80);
 
