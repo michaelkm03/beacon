@@ -551,7 +551,9 @@
 <div id="legend">
   <select id="legend-select" onchange="changeMetric()">
     <option value="value">Median Home Value</option>
-    <option value="yoy" selected>Year-over-Year Change %</option>
+    <option value="yoy" selected>1-Year Change %</option>
+    <option value="yoy3">3-Year Change %</option>
+    <option value="yoy5">5-Year Change %</option>
   </select>
   <div id="legend-items"></div>
   <div id="legend-sources">
@@ -736,9 +738,27 @@ const YOY_BREAKS = [
   { max: Infinity, color: "#1a9850", label: "> 7%"      },
 ];
 
+const YOY3_BREAKS = [
+  { max: -10,      color: "#d73027", label: "< -10%"    },
+  { max: 0,        color: "#fc8d59", label: "-10% – 0%"  },
+  { max: 15,       color: "#fee090", label: "0% – 15%"   },
+  { max: 30,       color: "#91cf60", label: "15% – 30%"  },
+  { max: Infinity, color: "#1a9850", label: "> 30%"       },
+];
+
+const YOY5_BREAKS = [
+  { max: -10,      color: "#d73027", label: "< -10%"    },
+  { max: 0,        color: "#fc8d59", label: "-10% – 0%"  },
+  { max: 25,       color: "#fee090", label: "0% – 25%"   },
+  { max: 60,       color: "#91cf60", label: "25% – 60%"  },
+  { max: Infinity, color: "#1a9850", label: "> 60%"       },
+];
+
 function getColor(val, metric) {
   if (val == null) return "#1a2a2c";
-  const breaks = metric === "yoy" ? YOY_BREAKS : VALUE_BREAKS;
+  const breaks = metric === "yoy"  ? YOY_BREAKS  :
+                 metric === "yoy3" ? YOY3_BREAKS :
+                 metric === "yoy5" ? YOY5_BREAKS : VALUE_BREAKS;
   for (const b of breaks) if (val <= b.max) return b.color;
   return "#555";
 }
@@ -790,7 +810,9 @@ document.addEventListener("mousemove", e => {
 
 // ── Legend ────────────────────────────────────────────────────────────────────
 function buildLegend(metric) {
-  const breaks = metric === "yoy" ? YOY_BREAKS : VALUE_BREAKS;
+  const breaks = metric === "yoy"  ? YOY_BREAKS  :
+                 metric === "yoy3" ? YOY3_BREAKS :
+                 metric === "yoy5" ? YOY5_BREAKS : VALUE_BREAKS;
   document.getElementById("legend-items").innerHTML = breaks.map(b =>
     `<div class="legend-row">
        <div class="legend-swatch" style="background:${b.color}"></div>
@@ -813,7 +835,9 @@ function strokeWeight() {
 function featureStyle(feature, selected = false) {
   const zip = feature.properties.zip;
   const d   = valueMap[zip];
-  const val = currentMetric === "yoy" ? d?.y : d?.v;
+  const val = currentMetric === "yoy"  ? d?.y  :
+              currentMetric === "yoy3" ? d?.y3 :
+              currentMetric === "yoy5" ? d?.y5 : d?.v;
   const hasSelection = activeLayer !== null;
   return {
     fillColor:   getColor(val, currentMetric),
@@ -845,12 +869,13 @@ function renderBoundaries() {
           color: "rgba(255,255,255,0.6)",
           weight: Math.max(strokeWeight(), 0.8),
         });
-        const yoyColor = d.y == null ? "" : d.y >= 0 ? "color:#6ee7b7" : "color:#fb7185";
+        const activeYoy = currentMetric === "yoy3" ? d.y3 : currentMetric === "yoy5" ? d.y5 : d.y;
+        const yoyColor  = activeYoy == null ? "" : activeYoy >= 0 ? "color:#6ee7b7" : "color:#fb7185";
         tooltip.innerHTML = `
           <div class="tt-zip">ZIP ${zip}</div>
           <div class="tt-city">${d.city || ""}${d.state ? ", " + d.state : ""}</div>
           <div class="tt-value">${fmtVal(d.v)}</div>
-          <div class="tt-yoy" style="${yoyColor}">${fmtYoy(d.y)}</div>
+          <div class="tt-yoy" style="${yoyColor}">${fmtYoy(activeYoy)}</div>
           <div class="tt-hint">Click for full investment trends →</div>`;
         tooltip.style.display = "block";
       });
